@@ -4,12 +4,12 @@ class Castle:
     def __init__(self, height, width):
         self.width = width
         self.height = height
-        self.block_grid = [[False] * self.width] * self.height
+        self.block_grid = [[False] * self.width for _ in range(self.height)]
 
         # Initialize record-keeping data-structures
         self.unavailable_column = [False] * self.width  # columns where we can't build without making an overhang
         self.placed_in_row = [0] * self.height
-        self.spaces = [[]] * self.height  # spaces at each level of the castle
+        self.spaces = [[] for _ in range(self.height)]  # spaces at each level of the castle
         
         self.last_id = 0  # ID of the last block placed
         self.current_row = self.height - 1  # current level we're working on todo invert
@@ -20,7 +20,8 @@ class Castle:
         self.place_block_update(Block(0, self.width), 0)
 
         # Leave the first row
-        self.current_row -= 1
+        if self.can_advance():
+            self.advance_row()
 
     def place_block_update(self, move, space_index):
         """ Robust block placement using constant-time space-navigation logic.
@@ -35,7 +36,7 @@ class Castle:
         # Lay the block
         self.last_id += 1
 
-        self.block_grid[self.current_row][move.index:right_side] = True
+        self.block_grid[self.current_row][move.index:right_side] = [True] * (right_side - move.index)
         self.placed_in_row[self.current_row] += 1
 
         # Mark sides as unavailable
@@ -51,7 +52,7 @@ class Castle:
 
         # These tell us whether we have to perform additional book-keeping on spaces to the sides of the move
         modify_left = left_side > space.index
-        modify_right = (right_side + 1) < (space.index + space.index)  # if space ends past move's right end
+        modify_right = right_side + 1 < space.index + space.width  # if space ends past move's right end
         new_index = space_index
 
         # Modify the current row's spaces
@@ -61,8 +62,8 @@ class Castle:
             self.skip_space = True
 
         if modify_right:
-            self.spaces[self.current_row][space_index] = Block(right_side + 1,
-                                                               space.index + space.width - right_side - 1)
+            self.spaces[self.current_row].insert(space_index, Block(right_side + 1,
+                                                                    space.index + space.width - right_side - 1))
 
         return new_index
 
@@ -97,7 +98,7 @@ class Castle:
 
         # Remove the block
         self.last_id -= 1
-        self.block_grid[self.current_row][move.index:right_side] = False
+        self.block_grid[self.current_row][move.index:right_side] = [False] * (right_side - move.index)
 
         # Remove space above
         self.modify_space_above(move, False)
@@ -116,20 +117,18 @@ class Castle:
                 right_side -= 1
 
         # Increment width because if left bound == right bound == 0, it's a one-width block
-        space = self.spaces[self.current_row][space_index]
         new_space = Block(left_side, right_side - left_side + 1)
 
         if left_space_free:  # todo comment and rename spaces
+            space = self.spaces[self.current_row].pop(space_index)
             new_space = Block(space.index, new_space.width + space.width)
-            self.spaces[self.current_row].remove(space_index)  # question pop?
 
         if right_space_free:  # if open block to right, must be a space
             new_space.width += self.spaces[self.current_row][space_index].width
-            self.spaces[self.current_row].remove(space_index)
+            self.spaces[self.current_row].pop(space_index)
 
         # Add the space
         self.spaces[self.current_row].insert(space_index, new_space)
-
 
     def modify_space_above(self, move, is_add):
         """Add or remove a space to/from the row above the given move. If already on the last row, does nothing.
@@ -175,6 +174,9 @@ class Castle:
     def can_advance(self):
         """Can start building the next level of the Castle."""
         return not self.in_last_row() and self.placed_in_row[self.current_row] > 0
+
+    def __hash__(self):
+        return 0  # TODO implement
 
 
 class Block:
