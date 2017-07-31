@@ -36,6 +36,7 @@ class CastleDealer:
         for width in range(1, self.max_width + 1):
             new_row = [width]
             for height in range(1, self.max_height + 1):
+                # Since all operations are reversible, just one global Castle can be used (for depth-first)
                 self.global_castle = cstl.Castle(height, width)  # TODO fix confusing reversal?
                 """
                 For castles with height = 1, the result is {0, 1}.
