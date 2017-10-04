@@ -1,59 +1,41 @@
-import castle as cstl
-from copy import copy
+from castle import Block, Castle
 import numpy as np
 import tabulate
 
 
 class CastleDealer:
+    castle_results = {}
+
     def run(self, max_height, max_width):
-        """Initializes bounds so we know up to what point cached moves should be prepared.
+        """Iterates Castles up to (max_height, max_width) and displays results.
 
         :param max_height: the maximum Castle height that will be used
         :param max_width: the maximum Castle width that will be used
         """
-        self.max_height, self.max_width = max_height, max_width
-
-        self.cache_moves()
-        self.castle_results = {}  # castle_results[castle] = number of even- and odd-blocked solutions
-
-        self.iterate_castles()
-
-    def cache_moves(self):  # todo generate on fly
-        # cached_moves[i] contains the moves available for a space of size i that weren't available for k < i
-        self.cached_moves = [[] for _ in range(self.max_width + 1)]
-        for move_size in range(1, self.max_width + 1):  # each valid size
-            for move_index in range(self.max_width + 1 - move_size):  # each valid index
-                self.cached_moves[move_size].append(cstl.Block(move_index, move_size))
-
-    def iterate_castles(self):
-        """Iterate Castles up to (max_height, max_width) and display results."""
-        print("Iterating over castle sizes (dimensions not exceeding {} by {}).".format(self.max_height,
-                                                                                        self.max_width))
-        print("Results format: [solutions with even blocks, solutions with odd blocks]")
+        print("Iterating over castle sizes (dimensions not exceeding {} by {}).".format(max_height, max_width))
 
         table = []
-        for width in range(1, self.max_width + 1):
+        for width in range(1, max_width + 1):
             new_row = [width]
-            for height in range(1, self.max_height + 1):
-                # Since all operations are reversible, just one global Castle can be used (for depth-first)
-                self.castle = cstl.Castle(height, width)  # TODO fix confusing reversal?
-                """
-                For castles with height = 1, the result is {0, 1}.
-                For castles where width = 1, the result is {(height + 1) % 2, height % 2}.
-                """
-                result = self.solve_castle(0)
-                new_row.append(result)
-                self.castle_results[self.castle] = result
-
+            for height in range(1, max_height + 1):
+                # Since all operations are reversible, one global Castle can be used
+                self.castle = Castle(height, width)  # TODO fix confusing reversal?
+                new_row.append(self.solve_castle(0))
+                self.castle_results[self.castle] = new_row[-1]
             table.append(new_row)
+
+        print("Results format: [solutions with even blocks, solutions with odd blocks]")
         headers = ["width \ height"]
-        headers += list(range(1, self.max_height + 1))
+        headers += list(range(1, max_height + 1))
         print(tabulate.tabulate(table, headers, tablefmt="grid"))
 
     def solve_castle(self, start_index):
         """Recursively enumerate Castles.
 
-        :param start_space_index: castle.spaces[castle.current_row][start_space_index] is currently being operated on.
+        When height = 1, the result is {0, 1}.
+        When width = 1, the result is {(height + 1) % 2, height % 2}.
+
+        :param start_index: castle.spaces[castle.current_row][start_space_index] is currently being operated on.
         :return result: list containing the number of even- and odd-block-numbered castles matching the given criteria.
         """
         result = np.array([0, 0])
@@ -66,10 +48,8 @@ class CastleDealer:
             for space_index, space in enumerate(self.castle.spaces[self.castle.current_row][start_index:],
                                                 start=start_index):  # for each remaining space
                 for move_width in range(1, space.width + 1):
-                    for move_index in range(space.width - move_width):
-                        move = copy(self.cached_moves[move_width][move_index])
-                        move.index += space.index  # increment by current index; cached_moves doesn't account for offset
-
+                    for move_index in range(space.index, space.index + space.width - move_width):
+                        move = Block(move_index, move_width)
                         last_space_index = self.castle.place_block_update(move, space_index)
 
                         if self.castle.skip_space:  # leave current space alone and proceed to next in list (branching)
