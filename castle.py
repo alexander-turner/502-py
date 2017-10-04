@@ -3,7 +3,7 @@ class Castle:
 
     def __init__(self, width, height):
         self.width, self.height = width, height
-        self.block_grid = [[False] * self.width for _ in range(self.height)]  # Todo change to lists
+        self.block_grid = [[False] * self.width for _ in range(self.height)] 
 
         # Initialize record-keeping data-structures
         self.unavailable_column = [False] * self.width  # columns where we can't build without making an overhang
@@ -45,14 +45,14 @@ class Castle:
         if right_side < self.width:
             self.unavailable_column[right_side] = True
 
-        # Add a new space above, indicating that we can now build on top of the block
-        self.modify_space_above(move, True)
+        # We can now build on top of the block
+        self.add_space_above(move)
 
-        space = self.spaces[self.current_row].pop(space_index)  # question correct?
+        space = self.spaces[self.current_row].pop(space_index)
 
-        # These tell us whether we have to perform additional book-keeping on spaces to the sides of the move
+        # Indicate whether we have to perform additional book-keeping on spaces to the sides of the move
         modify_left = left_side > space.index
-        modify_right = right_side + 1 < space.index + space.width  # if space ends past move's right end
+        modify_right = right_side + 1 < space.index + space.width  # if space ends past the move's right end
         new_index = space_index
 
         # Modify the current row's spaces
@@ -79,18 +79,18 @@ class Castle:
         block_to_left, block_to_right = False, False  # is there a block two spaces adjacent?
         left_overhang, right_overhang = False, False  # would building to left/right create an overhang?
 
-        if left_in_bounds:  # TODO comment this
+        if left_in_bounds:  # TODO comment
             left_overhang = not self.block_grid[self.current_row - 1][left_side]  # true if nothing is to the left
             if left_side > 0:
                 block_to_left = self.block_grid[self.current_row][left_side - 1]
-                left_space_free = not left_overhang and self.block_grid[self.current_row - 1][left_side - 1] and\
+                left_space_free = not left_overhang and self.block_grid[self.current_row - 1][left_side - 1] and \
                                   not block_to_left and not self.unavailable_column[left_side - 1]
 
         if right_in_bounds:
             right_overhang = not self.block_grid[self.current_row - 1][right_side]
             if right_side < self.width - 1:
                 block_to_right = self.block_grid[self.current_row][right_side + 1]
-                right_space_free = not right_overhang and self.block_grid[self.current_row - 1][right_side + 1] and\
+                right_space_free = not right_overhang and self.block_grid[self.current_row - 1][right_side + 1] and \
                                    not block_to_right and not self.unavailable_column[right_side + 1]
 
         increment_left = left_overhang or not left_in_bounds or (left_side > 0 and block_to_left)
@@ -101,7 +101,7 @@ class Castle:
         self.block_grid[self.current_row][move.index:right_side] = [False] * (right_side - move.index)
 
         # Remove space above
-        self.modify_space_above(move, False)
+        self.remove_space_above()
         self.placed_in_row[self.current_row] -= 1
 
         # Mark as available if the removed block was why the column wasn't available
@@ -130,20 +130,20 @@ class Castle:
         # Add the space
         self.spaces[self.current_row].insert(space_index, new_space)
 
-    def modify_space_above(self, move, is_add):
-        """Add or remove a space to/from the row above the given move. If already on the last row, does nothing.
+    def add_space_above(self, space):
+        """Add a space to the next row, if there is one.
 
-        If a remove is desired, the space must be last in the list.
-
-        :param move: Block object; the move being executed.
-        :param is_add: is being called by an add operation.
+        :param space: a Block; the move being executed.
         """
         if self.in_last_row():
             return
-        if is_add:
-            self.spaces[self.current_row + 1].append(move)
-        else:
-            self.spaces[self.current_row + 1].pop()  # question ok to just pop here?
+        self.spaces[self.current_row + 1].append(space)
+
+    def remove_space_above(self, ):
+        """Remove the last space from the next row, if there is one."""
+        if self.in_last_row():
+            return
+        self.spaces[self.current_row + 1].pop()
 
     def advance_row(self):
         self.current_row += 1
@@ -168,7 +168,7 @@ class Castle:
         return self.last_row_has_blocks() and not self.last_id_even()
 
     def can_add_block(self):
-        return len(self.spaces[self.current_row]) > 0
+        return self.spaces[self.current_row]
 
     def can_advance(self):
         """Can start building the next level of the Castle."""
