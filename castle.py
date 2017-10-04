@@ -24,7 +24,7 @@ class Castle:
             self.advance_row()
 
     def place_block_update(self, move, space_index):
-        """ Robust block placement using constant-time space-navigation logic.
+        """Robust block placement using constant-time space-navigation logic.
 
         :param move: a Block.
         :param space_index: the space currently being operated in is self.spaces[self.current_row][space_index].
@@ -138,13 +138,12 @@ class Castle:
         :param move: Block object; the move being executed.
         :param is_add: is being called by an add operation.
         """
-        above = self.current_row + 1
-        if above >= self.height:
+        if self.in_last_row():
             return
         if is_add:
-            self.spaces[above].append(move)
+            self.spaces[self.current_row + 1].append(move)
         else:
-            self.spaces[above].pop()  # question ok to just pop here?
+            self.spaces[self.current_row + 1].pop()  # question ok to just pop here?
 
     def advance_row(self):
         self.current_row += 1
@@ -154,7 +153,7 @@ class Castle:
 
     def last_id_even(self):
         """True if the last block ID was even."""
-        return (self.last_id - 1) % 2 == 0  # question check
+        return (self.last_id - 1) % 2 == 0
 
     def last_row_has_blocks(self):
         return self.placed_in_row[-1] > 0
@@ -176,7 +175,13 @@ class Castle:
         return not self.in_last_row() and self.placed_in_row[self.current_row] > 0
 
     def __repr__(self):
-        raise NotImplementedError  # TODO implement
+        output = ''
+        for row in range(self.height - 1, -1, -1):
+            row_str = ''
+            for col in range(self.width):
+                row_str += ('_', 'X')[self.block_grid[row][col]]
+            output += row_str + (' <' if row == self.current_row else '') + '\n'
+        return output
 
 
 class Block:

@@ -4,8 +4,6 @@ import tabulate
 
 
 class CastleDealer:
-    castle_results = {}
-
     def run(self, max_height, max_width):
         """Iterates Castles up to (max_height, max_width) and displays results.
 
@@ -15,18 +13,16 @@ class CastleDealer:
         print("Iterating over castle sizes (dimensions not exceeding {} by {}).".format(max_height, max_width))
 
         table = []
-        for width in range(1, max_width + 1):
+        for width in range(1, 2):#max_width + 1):
             new_row = [width]
             for height in range(1, max_height + 1):
                 # Since all operations are reversible, one global Castle can be used
                 self.castle = Castle(width, height)
                 new_row.append(self.solve_castle(0))
-                self.castle_results[self.castle] = new_row[-1]  # TODO need?
             table.append(new_row)
 
         print("Results format: [solutions with even blocks, solutions with odd blocks]")
-        headers = ["width \ height"]
-        headers += list(range(1, max_height + 1))
+        headers = ["width \ height"] + list(range(1, max_height + 1))
         print(tabulate.tabulate(table, headers, tablefmt="grid"))
 
     def solve_castle(self, start_index):
@@ -61,8 +57,10 @@ class CastleDealer:
                         self.castle.remove_block_update(move, last_space_index)
 
         if self.castle.can_advance():
+            print(self.castle)
             self.castle.advance_row()
             result += self.solve_castle(0)
             self.castle.retreat_row()
+            print(self.castle)
 
         return result
