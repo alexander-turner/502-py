@@ -4,7 +4,7 @@ class Castle:
     def __init__(self, height, width):
         self.width = width
         self.height = height
-        self.block_grid = [[False] * self.width for _ in range(self.height)]
+        self.block_grid = [[False] * self.width for _ in range(self.height)]  # Todo change to lists
 
         # Initialize record-keeping data-structures
         self.unavailable_column = [False] * self.width  # columns where we can't build without making an overhang
@@ -13,7 +13,8 @@ class Castle:
         
         self.last_id = 0  # ID of the last block placed
         self.current_row = self.height - 1  # current level we're working on todo invert
-        self.skip_space = False  # question what does this do
+        # If we've already processed all permutations created by placing a block in space at space_index
+        self.skip_space = False
 
         # Place first space and block
         self.spaces[self.current_row].append(Block(0, self.width))  # "block" of empty space
@@ -138,7 +139,7 @@ class Castle:
         :param move: Block object; the move being executed.
         :param is_add: is being called by an add operation.
         """
-        above = self.current_row - 1
+        above = self.current_row - 1  # todo fix when inverting
         if above < 0:
             return
         if is_add:
