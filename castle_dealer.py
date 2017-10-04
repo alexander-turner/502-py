@@ -44,7 +44,7 @@ class CastleDealer:
                 for move_width in range(1, space.width + 1):
                     for move_index in range(space.index, space.index + space.width - move_width + 1):
                         move = Block(move_index, move_width)
-                        last_space_index = self.castle.place_block_update(move, space_index)
+                        last_space_index = self.castle.place_block(move, space_index)
 
                         if self.castle.skip_space:  # leave current space alone and proceed to next in list (branching)
                             self.castle.skip_space = False
@@ -52,7 +52,7 @@ class CastleDealer:
                         else:
                             result += self.solve_castle(last_space_index)
 
-                        self.castle.remove_block_update(move, last_space_index)
+                        self.castle.remove_block(move, last_space_index)
 
         if self.castle.can_advance():
             self.castle.advance_row()

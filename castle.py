@@ -3,7 +3,7 @@ class Castle:
 
     def __init__(self, width, height):
         self.width, self.height = width, height
-        self.block_grid = [[False] * self.width for _ in range(self.height)] 
+        self.block_grid = [[False] * self.width for _ in range(self.height)]
 
         # Initialize record-keeping data-structures
         self.unavailable_column = [False] * self.width  # columns where we can't build without making an overhang
@@ -17,26 +17,26 @@ class Castle:
 
         # Place first space and block
         self.spaces[self.current_row].append(Block(0, self.width))  # "block" of empty space
-        self.place_block_update(Block(0, self.width), 0)
+        self.place_block(Block(0, self.width), 0)
 
         # Leave the first row
         if self.can_advance():
             self.advance_row()
 
-    def place_block_update(self, move, space_index):
-        """Robust block placement using constant-time space-navigation logic.
+    def place_block(self, block, space_index):
+        """Robust block placement.
 
-        :param move: a Block.
+        :param block:
         :param space_index: the space currently being operated in is self.spaces[self.current_row][space_index].
         :return new_index: index of left space created by the displacement move causes in the space.
                  If no spaces remain, -1 is returned.
         """
-        left_side, right_side = move.index - 1, move.index + move.width
+        left_side, right_side = block.index - 1, block.index + block.width
 
         # Lay the block
         self.last_id += 1
 
-        self.block_grid[self.current_row][move.index:right_side] = [True] * (right_side - move.index)
+        self.block_grid[self.current_row][block.index:right_side] = [True] * (right_side - block.index)
         self.placed_in_row[self.current_row] += 1
 
         # Mark sides as unavailable
@@ -46,13 +46,13 @@ class Castle:
             self.unavailable_column[right_side] = True
 
         # We can now build on top of the block
-        self.add_space_above(move)
+        self.add_space_above(block)
 
         space = self.spaces[self.current_row].pop(space_index)
 
-        # Indicate whether we have to perform additional book-keeping on spaces to the sides of the move
+        # Indicate whether we have to perform additional book-keeping on spaces to the sides of the block
         modify_left = left_side > space.index
-        modify_right = right_side + 1 < space.index + space.width  # if space ends past the move's right end
+        modify_right = right_side + 1 < space.index + space.width  # if space ends past the block's right end
         new_index = space_index
 
         # Modify the current row's spaces
@@ -67,13 +67,13 @@ class Castle:
 
         return new_index
 
-    def remove_block_update(self, move, space_index):
-        """Removes the specified already-placed block and merges any relevant space(s).
+    def remove_block(self, block, space_index):
+        """Removes the specified block and merges any relevant space(s).
 
-        :param move: a Block.
-        :param space_index: the space in question in is self.spaces[self.current_row][space_index].
+        :param block:
+        :param space_index: the space in question is self.spaces[self.current_row][space_index].
         """
-        left_side, right_side = move.index - 1, move.index + move.width
+        left_side, right_side = block.index - 1, block.index + block.width
         left_in_bounds, right_in_bounds = left_side > 0, right_side < self.width  # immediate neighbors in bounds?
         left_space_free, right_space_free = False, False  # is there a zero two spaces adjacent?
         block_to_left, block_to_right = False, False  # is there a block two spaces adjacent?
@@ -98,7 +98,7 @@ class Castle:
 
         # Remove the block
         self.last_id -= 1
-        self.block_grid[self.current_row][move.index:right_side] = [False] * (right_side - move.index)
+        self.block_grid[self.current_row][block.index:right_side] = [False] * (right_side - block.index)
 
         # Remove space above
         self.remove_space_above()
