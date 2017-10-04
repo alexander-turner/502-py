@@ -1,9 +1,8 @@
 class Castle:
     """A robust interface for generating and manipulating Castles."""
 
-    def __init__(self, height, width):
-        self.width = width
-        self.height = height
+    def __init__(self, width, height):
+        self.width, self.height = width, height
         self.block_grid = [[False] * self.width for _ in range(self.height)]  # Todo change to lists
 
         # Initialize record-keeping data-structures
@@ -12,7 +11,7 @@ class Castle:
         self.spaces = [[] for _ in range(self.height)]  # spaces at each level of the castle
         
         self.last_id = 0  # ID of the last block placed
-        self.current_row = self.height - 1  # current level we're working on todo invert
+        self.current_row = 0  # current level we're working on
         # If we've already processed all permutations created by placing a block in space at space_index
         self.skip_space = False
 
@@ -29,8 +28,8 @@ class Castle:
 
         :param move: a Block.
         :param space_index: the space currently being operated in is self.spaces[self.current_row][space_index].
-        :return newIndex: index of left space created by the displacement move causes in the space. If no spaces remain,
-            -1 is returned.
+        :return new_index: index of left space created by the displacement move causes in the space.
+                 If no spaces remain, -1 is returned.
         """
         left_side, right_side = move.index - 1, move.index + move.width
 
@@ -62,9 +61,9 @@ class Castle:
             space_index += 1
             self.skip_space = True
 
-        if modify_right:
-            self.spaces[self.current_row].insert(space_index, Block(right_side + 1,
-                                                                    space.index + space.width - right_side - 1))
+        if modify_right:  # TODO inserts take O(n)
+            self.spaces[self.current_row].insert(space_index,
+                                                 Block(right_side + 1, space.index + space.width - right_side - 1))
 
         return new_index
 
@@ -81,17 +80,17 @@ class Castle:
         left_overhang, right_overhang = False, False  # would building to left/right create an overhang?
 
         if left_in_bounds:  # TODO comment this
-            left_overhang = not self.block_grid[self.current_row + 1][left_side]  # true if nothing is to the left
+            left_overhang = not self.block_grid[self.current_row - 1][left_side]  # true if nothing is to the left
             if left_side > 0:
                 block_to_left = self.block_grid[self.current_row][left_side - 1]
-                left_space_free = not left_overhang and self.block_grid[self.current_row + 1][left_side - 1] and\
+                left_space_free = not left_overhang and self.block_grid[self.current_row - 1][left_side - 1] and\
                                   not block_to_left and not self.unavailable_column[left_side - 1]
 
         if right_in_bounds:
-            right_overhang = not self.block_grid[self.current_row + 1][right_side]
+            right_overhang = not self.block_grid[self.current_row - 1][right_side]
             if right_side < self.width - 1:
                 block_to_right = self.block_grid[self.current_row][right_side + 1]
-                right_space_free = not right_overhang and self.block_grid[self.current_row + 1][right_side + 1] and\
+                right_space_free = not right_overhang and self.block_grid[self.current_row - 1][right_side + 1] and\
                                    not block_to_right and not self.unavailable_column[right_side + 1]
 
         increment_left = left_overhang or not left_in_bounds or (left_side > 0 and block_to_left)
@@ -112,10 +111,10 @@ class Castle:
             self.unavailable_column[right_side] = False
 
         # Adjust dimensions of soon-to-be-added space
-            if increment_left:
-                left_side += 1
-            if decrement_right:
-                right_side -= 1
+        if increment_left:
+            left_side += 1
+        if decrement_right:
+            right_side -= 1
 
         # Increment width because if left bound == right bound == 0, it's a one-width block
         new_space = Block(left_side, right_side - left_side + 1)
@@ -139,29 +138,29 @@ class Castle:
         :param move: Block object; the move being executed.
         :param is_add: is being called by an add operation.
         """
-        above = self.current_row - 1  # todo fix when inverting
-        if above < 0:
+        above = self.current_row + 1
+        if above >= self.height:
             return
         if is_add:
-            self.spaces[above].append(Block(move.index, move.width))  # question can be move itself?
+            self.spaces[above].append(move)
         else:
             self.spaces[above].pop()  # question ok to just pop here?
 
     def advance_row(self):
-        self.current_row -= 1
+        self.current_row += 1
 
     def retreat_row(self):
-        self.current_row += 1
+        self.current_row -= 1
 
     def last_id_even(self):
         """True if the last block ID was even."""
-        return ((self.last_id - 1) % 2) == 0  # question check
+        return (self.last_id - 1) % 2 == 0  # question check
 
     def last_row_has_blocks(self):
-        return self.placed_in_row[0] > 0  # todo fix when inverting
+        return self.placed_in_row[-1] > 0
 
     def in_last_row(self):
-        return self.current_row == 0
+        return self.current_row == self.height - 1
 
     def is_even_solution(self):
         return self.last_row_has_blocks() and self.last_id_even()
@@ -176,8 +175,8 @@ class Castle:
         """Can start building the next level of the Castle."""
         return not self.in_last_row() and self.placed_in_row[self.current_row] > 0
 
-    def __hash__(self):
-        return 0  # TODO implement
+    def __repr__(self):
+        raise NotImplementedError  # TODO implement
 
 
 class Block:
@@ -185,10 +184,9 @@ class Block:
         """Demarcates the starting column and width of a block.
 
         :param index: column where the left edge of the space begins.
-        :param width:
         """
         self.index = index
         self.width = width
 
     def __repr__(self):
-        print("(index: {}, width: {})".format(self.index, self.width))
+        print("[index: {}, width: {}]".format(self.index, self.width))

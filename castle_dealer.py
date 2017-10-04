@@ -19,9 +19,9 @@ class CastleDealer:
             new_row = [width]
             for height in range(1, max_height + 1):
                 # Since all operations are reversible, one global Castle can be used
-                self.castle = Castle(height, width)  # TODO fix confusing reversal?
+                self.castle = Castle(width, height)
                 new_row.append(self.solve_castle(0))
-                self.castle_results[self.castle] = new_row[-1]
+                self.castle_results[self.castle] = new_row[-1]  # TODO need?
             table.append(new_row)
 
         print("Results format: [solutions with even blocks, solutions with odd blocks]")
@@ -32,8 +32,8 @@ class CastleDealer:
     def solve_castle(self, start_index):
         """Recursively enumerate Castles.
 
-        When height = 1, the result is {0, 1}.
-        When width = 1, the result is {(height + 1) % 2, height % 2}.
+        When height = 1, the result is [0, 1].
+        When width = 1, the result is [(height + 1) % 2, height % 2].
 
         :param start_index: castle.spaces[castle.current_row][start_space_index] is currently being operated on.
         :return result: list containing the number of even- and odd-block-numbered castles matching the given criteria.
