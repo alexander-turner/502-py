@@ -12,7 +12,7 @@ class Castle:
         
         self.last_id = 0  # ID of the last block placed
         self.current_row = 0  # current level we're working on
-        # If we've already processed all permutations created by placing a block in space at space_index
+        # If we've already processed all permutations created by placing a block in space
         self.skip_space = False
 
         # Place first space and block
@@ -139,7 +139,7 @@ class Castle:
             return
         self.spaces[self.current_row + 1].append(space)
 
-    def remove_space_above(self, ):
+    def remove_space_above(self):
         """Remove the last space from the next row, if there is one."""
         if self.in_last_row():
             return
@@ -164,9 +164,6 @@ class Castle:
     def is_even_solution(self):
         return self.last_row_has_blocks() and self.last_id_even()
 
-    def is_odd_solution(self):
-        return self.last_row_has_blocks() and not self.last_id_even()
-
     def can_add_block(self):
         return self.spaces[self.current_row]
 
@@ -179,7 +176,7 @@ class Castle:
         for row in range(self.height - 1, -1, -1):
             row_str = ''
             for col in range(self.width):
-                row_str += ('_', 'X')[self.block_grid[row][col]]
+                row_str += ('░', '█')[self.block_grid[row][col]]
             output += row_str + (' <' if row == self.current_row else '') + '\n'
         return output
 

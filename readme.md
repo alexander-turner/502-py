@@ -40,7 +40,6 @@ and pursue each option:
 
 ███ ███ ███ ███ ███ ███
 
-We maintain a list of spaces for both the current and next row, allowing constant-time block building / removal.
 After every move, we check to see if the current configuration satisfies the 6 criteria listed above.
-If it does, we add it to the sum tracked for the current iteration of the function, which is eventually returned and
-added to those found by the other branches pursued in this depth-first exploration of the castle space.
+If it does, we add it to the sum for the current iteration of the function, which is eventually returned and
+added to those found by the other branches in the depth-first search.
